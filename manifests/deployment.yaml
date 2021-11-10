@@ -1,0 +1,83 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ducklett
+  name: ducklett
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ducklett
+  template:
+    metadata:
+      labels:
+        app: ducklett
+    spec:
+      serviceAccountName: ducklett
+      tolerations:
+        - effect: NoSchedule
+          operator: "Equal"
+          value: ""
+          key: node-role.kubernetes.io/master
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      containers:
+        - image: registry.gitlab.com/tmobile/conducktor/infrastructure/components/ducklett:${release_version}
+          imagePullPolicy: IfNotPresent
+          name: ducklett
+          command:
+            - ./ducklett
+            - --check-period=30
+            - --cp-concurrency=5
+            - --worker-concurrency=6
+            - --v=3
+          env:
+            - name: ARM_SUBSCRIPTION_ID
+              valueFrom:
+                secretKeyRef:
+                  key: SubscriptionID
+                  name: ducklett
+            - name: ARM_RESOURCE_GROUP
+              valueFrom:
+                secretKeyRef:
+                  key: ResourceGroup
+                  name: ducklett
+            - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
+              value: "true"
+            - name: ARM_VM_TYPE
+              value: "vmss"
+            - name: CLUSTER_NAME
+              value: ${cluster_name}
+          resources:
+            limits:
+              cpu: 100m
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 300Mi
+          volumeMounts:
+            - mountPath: /etc/ssl/certs/ca-certificates.crt
+              name: ssl-certs
+              readOnly: true
+            - mountPath: /var/lib/waagent/
+              name: waagent
+              readOnly: true
+            - mountPath: /etc/kubernetes/pki/etcd
+              name: etcd-certs
+      imagePullSecrets: 
+      - name: registry-credentials
+      restartPolicy: Always
+      volumes:
+        - hostPath:
+            path: /etc/ssl/certs/ca-certificates.crt
+            type: ""
+          name: ssl-certs
+        - hostPath:
+            path: /var/lib/waagent/
+          name: waagent
+        - hostPath:
+            path: /etc/kubernetes/pki/etcd
+            type: DirectoryOrCreate
+          name: etcd-certs

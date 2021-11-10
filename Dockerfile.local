@@ -1,0 +1,37 @@
+FROM golang:1.16 as build-env
+LABEL maintainer="Justin Hopper <justin.hopper6@t-mobile.com>"
+
+# Copy go mod
+RUN mkdir /ducklett
+WORKDIR /ducklett
+COPY go.mod . 
+COPY go.sum .
+
+# Copy netrc for 'go get' to work
+COPY .netrc /root/.netrc
+
+# Install git
+#RUN apk add git
+
+# Download all deps
+COPY . .
+RUN go mod download
+RUN go fmt
+RUN go vet
+RUN go test -race ./...
+
+# Update image version to what we're building here
+ARG RELEASE_VERSION
+RUN sed -i "s|RELEASE_VERSION_HERE|$RELEASE_VERSION|" version/version.go
+  # Build image and utility binary
+#  - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $RELEASE_NAME
+#  - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o update-azure-image-tags test-utility/cmd/main.go
+ARG RELEASE_NAME
+RUN go build -o $RELEASE_NAME
+RUN go build -o update-azure-image-tags test-utility/cmd/main.go
+
+# Build the binary
+RUN make build
+FROM alpine:3.13.5 
+COPY --from=build-env /ducklett/ducklett /ducklett
+ENTRYPOINT ["/ducklett"]
