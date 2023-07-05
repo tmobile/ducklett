@@ -8,14 +8,14 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/stretchr/testify v1.7.0
-	go.etcd.io/etcd/client/v3 v3.5.0
-	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
+	github.com/googleapis/gnostic v0.5.5 // indirect
+	github.com/stretchr/testify v1.8.0
+	go.etcd.io/etcd/client/v3 v3.5.1
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
 	k8s.io/client-go v0.22.0
-	k8s.io/klog/v2 v2.9.0
-	k8s.io/kubernetes v1.22.2
+	k8s.io/klog/v2 v2.60.1
+	k8s.io/kubernetes v1.24.15
 	sigs.k8s.io/yaml v1.2.0
 
 )
